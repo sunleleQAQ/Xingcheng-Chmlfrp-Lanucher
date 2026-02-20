@@ -1,47 +1,28 @@
 name: Nuitka-pack
 
 on:
+  workflow_dispatch:  # 手动触发
   push:
-    branches:
-      - main
+    branches: [ main ]
   pull_request:
-    branches:
-      - main
-  workflow_dispatch:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: windows-latest
-
+    
     steps:
       - uses: actions/checkout@v4
-
+      
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.8.x'
           architecture: 'x64'
-          cache: 'pip'
-
-      - name: Cache Nuitka build
-        uses: actions/cache@v4
-        with:
-          path: |
-            *.build
-            __pycache__
-          key: ${{ runner.os }}-nuitka-${{ hashFiles('*.py') }}
-          restore-keys: |
-            ${{ runner.os }}-nuitka-
-
+          
       - name: Install dependencies
         run: pip install -r requirements.txt
-
+        
       - name: Build with Nuitka
         uses: Nuitka/Nuitka-Action@v1.3
         with:
@@ -49,14 +30,11 @@ jobs:
           script-name: start.py
           mode: standalone
           include-data-dir: res=res
-          include-data-files: res/frpc.exe=res/frpc.exe  # 修正格式
+          include-data-files: res/frpc.exe=res/frpc.exe
           enable-plugins: tk-inter
-          windows-icon-from-ico: icon.ico  # 可选：添加图标
-          onefile: false  # 明确指定是否为单文件模式
-
+          
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: XCL II-Canary
           path: build/start.dist/
-          compression-level: 0  # 0=不压缩，更快上传

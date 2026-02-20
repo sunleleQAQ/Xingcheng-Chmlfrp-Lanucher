@@ -1,5 +1,5 @@
 name: Nuitka-pack
- 
+
 on:
   push:
     branches:
@@ -9,38 +9,47 @@ on:
       - main
 
 jobs:
-
   build:
-    # Windows is currently the only platform this action supports
     runs-on: windows-latest
 
     steps:
-
-      # Check-out repository
       - uses: actions/checkout@v4
 
-      # Setup Python
-      - uses: actions/setup-python@v5
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.8.x' # Version range or exact version of a Python version to use, using SemVer's version range syntax
-          architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
+          python-version: '3.8.x'
+          architecture: 'x64'
           cache: 'pip'
-      - run: pip install -r requirements.txt
 
-      # Build python script into exe
-      - uses: Nuitka/Nuitka-Action@v1.3
+      - name: Cache Nuitka build
+        uses: actions/cache@v4
+        with:
+          path: |
+            *.build
+            __pycache__
+          key: ${{ runner.os }}-nuitka-${{ hashFiles('*.py') }}
+          restore-keys: |
+            ${{ runner.os }}-nuitka-
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Build with Nuitka
+        uses: Nuitka/Nuitka-Action@v1.3
         with:
           nuitka-version: 2.8.10
           script-name: start.py
           mode: standalone
-          include-data-dir: res=res 
-          include-data-files: res/frpc.exe=res/frpc.exe
+          include-data-dir: res=res
+          include-data-files: res/frpc.exe=res/frpc.exe  # 修正格式
           enable-plugins: tk-inter
+          windows-icon-from-ico: icon.ico  # 可选：添加图标
+          onefile: false  # 明确指定是否为单文件模式
 
-      # Uploads artifact
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: XCL II-Canary
           path: build/start.dist/
-          compression-level: 0
+          compression-level: 0  # 0=不压缩，更快上传

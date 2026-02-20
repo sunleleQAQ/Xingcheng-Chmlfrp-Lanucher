@@ -1,5 +1,5 @@
 import os
-import json
+import json 
 import urllib.request
 import customtkinter as ctk
 import core.g_var
